@@ -1,4 +1,4 @@
-# Standard Skeleton Project
+# Google Cloud Auth
 
 [![TravisCI]()]()
 [![Maintainability]()]()
