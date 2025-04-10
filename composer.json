@@ -1,11 +1,10 @@
 {
     "name": "phpexperts/gcloud-auth",
-    "description": "A quick and easy standard PHP skeleton.",
+    "description": "A drop-dead simple way to authenticate APIs with Google Cloud without needing the gcloud-api dependency.",
     "keywords": [
-        "universal package layout",
-        "standard package layout",
-        "new project",
-        "project layout"
+        "google cloud",
+        "gcloud",
+        "api"
     ],
     "homepage": "https://github.com/PHPExpertsInc/gcloud-auth",
     "license": "MIT",
@@ -43,14 +42,6 @@
         "psr-4": { "PHPExperts\\GCloudAuth\\Tests\\" : "tests/" }
     },
     "config": {
-        "classmap-authoritative": true,
-        "allow-plugins": {
-            "0.0.0/composer-include-files": true
-        }
-    },
-    "scripts": {
-        "post-create-project-cmd": [
-            "PHP_VERSION=native php install.php"
-        ]
+        "classmap-authoritative": true
     }
 }

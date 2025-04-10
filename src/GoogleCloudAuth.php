@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace PHPExperts\GCloudAuth;
 
+use JsonException;
 use PHPExperts\RESTSpeaker\NoAuth;
 use PHPExperts\RESTSpeaker\RESTAuth;
 use PHPExperts\RESTSpeaker\RESTSpeaker;
@@ -26,6 +27,7 @@ class GoogleCloudAuth extends RESTAuth
     private ?string $oauth2Token = null;
     private int $expiresAt = -1;
 
+    /** @throws JsonException */
     public function __construct(string $serviceJSON)
     {
         // If it ends with .json, assume it is a file.
@@ -42,13 +44,15 @@ class GoogleCloudAuth extends RESTAuth
                 throw new \RuntimeException("Cannot read '$serviceAccountFile'.");
             }
 
-            $this->serviceAccountData = json_decode(file_get_contents($serviceAccountFile), true);
+            $serviceAccountData = json_decode(file_get_contents($serviceAccountFile), true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new \RuntimeException('Invalid JSON in service account file');
+                throw new \RuntimeException('Invalid JSON in the service account file.');
             }
+
+            $this->serviceAccountData = $serviceAccountData;
         } else {
-            $this->serviceAccountData = $serviceJSON;
+            $this->serviceAccountData = json_decode($serviceJSON, true, flags: JSON_THROW_ON_ERROR);
         }
 
         parent::__construct(RESTAuth::AUTH_MODE_OAUTH2);
@@ -73,7 +77,7 @@ class GoogleCloudAuth extends RESTAuth
         $serviceAccount = $this->serviceAccountData;
 
         if (!isset($serviceAccount['client_email'], $serviceAccount['private_key'], $serviceAccount['token_uri'])) {
-            throw new RuntimeException('Invalid service-account JSON');
+            throw new RuntimeException('Invalid service account JSON');
         }
 
         $clientEmail = $serviceAccount['client_email'];
@@ -111,14 +115,9 @@ class GoogleCloudAuth extends RESTAuth
 
         // Exchange JWT for access token using RESTSpeaker
         $api = new class($tokenUri) extends RESTSpeaker {
-            public function __construct(private string $baseUrl)
+            public function __construct(string $baseUrl)
             {
-                parent::__construct(new NoAuth());
-            }
-
-            public function getBaseUrl(): string
-            {
-                return $this->baseUrl;
+                parent::__construct(new NoAuth(), $baseUrl);
             }
         };
 
@@ -130,7 +129,7 @@ class GoogleCloudAuth extends RESTAuth
         ]);
 
         if (!isset($response->access_token)) {
-            throw new \RuntimeException('Failed to obtain access token: ' . json_encode($response));
+            throw new \RuntimeException('Failed to obtain access token: ' . json_encode($response)); // @codeCoverageIgnore
         }
 
         $this->expiresAt = $response->expires_in + $time;
