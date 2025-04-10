@@ -1,0 +1,56 @@
+{
+    "name": "phpexperts/gcloud-auth",
+    "description": "A quick and easy standard PHP skeleton.",
+    "keywords": [
+        "universal package layout",
+        "standard package layout",
+        "new project",
+        "project layout"
+    ],
+    "homepage": "https://github.com/PHPExpertsInc/gcloud-auth",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "PHP Experts, Inc.",
+            "homepage": "https://www.phpexperts.pro/"
+        },
+        {
+            "name": "Theodore R. Smith",
+            "homepage": "https://www.linkedin.com/in/tedrsmith"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*",
+        "ext-openssl": "*",
+        "phpexperts/rest-speaker": "^v2.7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "*",
+        "phpstan/phpstan": "*",
+        "friendsofphp/php-cs-fixer": "*",
+        "symfony/var-dumper": "*",
+        "povils/phpmnd": "*",
+        "squizlabs/php_codesniffer": "*",
+        "phpexperts/dockerize": "^12.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "PHPExperts\\GCloudAuth\\" : "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": { "PHPExperts\\GCloudAuth\\Tests\\" : "tests/" }
+    },
+    "config": {
+        "classmap-authoritative": true,
+        "allow-plugins": {
+            "0.0.0/composer-include-files": true
+        }
+    },
+    "scripts": {
+        "post-create-project-cmd": [
+            "PHP_VERSION=native php install.php"
+        ]
+    }
+}
