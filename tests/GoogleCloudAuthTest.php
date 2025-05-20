@@ -4,10 +4,12 @@ declare(strict_types=1);
 namespace PHPExperts\GCloudAuth\Tests;
 
 use GuzzleHttp\Exception\ClientException;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
 use PHPExperts\GCloudAuth\GoogleCloudAuth;
 use PHPExperts\RESTSpeaker\RESTSpeaker;
+use ReflectionClass;
 use ReflectionMethod;
 use RuntimeException;
 
@@ -27,6 +29,20 @@ class GoogleCloudAuthTest extends TestCase
 {
     private GoogleCloudAuth $auth;
     private RESTSpeaker $api;
+
+    private array $validServiceAccountData = [
+        'type'           => 'service_account',
+        'project_id'     => 'test-project-123',
+        'private_key_id' => 'abc123',
+        'private_key'    => '-----BEGIN PRIVATE KEY-----\nMockKey\n-----END PRIVATE KEY-----',
+        'client_email'   => 'test@test-project-123.iam.gserviceaccount.com',
+        'client_id'      => '123456789',
+        'auth_uri'       => 'https://accounts.google.com/o/oauth2/auth',
+        'token_uri'      => 'https://oauth2.googleapis.com/token',
+        'auth_provider_x509_cert_url' => 'https://www.googleapis.com/oauth2/v1/certs',
+        'client_x509_cert_url' => 'https://www.googleapis.com/robot/v1/metadata/x509/test@test-project-123.iam.gserviceaccount.com',
+        'universe_domain' => 'googleapis.com'
+    ];
 
     public function setUp(): void
     {
@@ -237,5 +253,79 @@ class GoogleCloudAuthTest extends TestCase
         $this->assertNotEmpty($audioData);
 
         file_put_contents(__DIR__ . '/test_output.mp3', $audioData);
+    }
+
+    /**
+     * Create a testable instance by setting the service account data directly
+     */
+    private function createTestInstance(array $serviceAccountData): GoogleCloudAuth
+    {
+        // Create a JSON string from the service account data
+        $serviceJSON = json_encode($serviceAccountData);
+
+        // Use reflection to create an instance and set properties directly
+        $reflection = new ReflectionClass(GoogleCloudAuth::class);
+
+        // Create a new instance without calling the constructor
+        $googleCloudAuth = $reflection->newInstanceWithoutConstructor();
+
+        // Set the service account data
+        $property = $reflection->getProperty('serviceAccountData');
+        $property->setAccessible(true);
+        $property->setValue($googleCloudAuth, $serviceAccountData);
+
+        return $googleCloudAuth;
+    }
+
+    /**
+     * @covers \PHPExperts\GCloudAuth\GoogleCloudAuth::getGoogleServiceAccountData
+     */
+    public function testGetGoogleServiceAccountData_ReturnsServiceAccountData(): void
+    {
+        // Arrange
+        $googleCloudAuth = $this->createTestInstance($this->validServiceAccountData);
+
+        // Act
+        $result = $googleCloudAuth->getGoogleServiceAccountData();
+
+        // Assert
+        $this->assertSame($this->validServiceAccountData, $result);
+        $this->assertArrayHasKey('project_id', $result);
+        $this->assertArrayHasKey('private_key', $result);
+        $this->assertArrayHasKey('client_email', $result);
+    }
+
+    /**
+     * @covers \PHPExperts\GCloudAuth\GoogleCloudAuth::getProjectId
+     */
+    public function testGetProjectId_ReturnsProjectId(): void
+    {
+        // Arrange
+        $googleCloudAuth = $this->createTestInstance($this->validServiceAccountData);
+        $expectedProjectId = 'test-project-123';
+
+        // Act
+        $result = $googleCloudAuth->getProjectId();
+
+        // Assert
+        $this->assertSame($expectedProjectId, $result);
+    }
+
+    /**
+     * @covers \PHPExperts\GCloudAuth\GoogleCloudAuth::getProjectId
+     */
+    public function testGetProjectId_ThrowsException_WhenProjectIdIsMissing(): void
+    {
+        // Arrange
+        $incompleteServiceAccountData = $this->validServiceAccountData;
+        unset($incompleteServiceAccountData['project_id']);
+
+        $googleCloudAuth = $this->createTestInstance($incompleteServiceAccountData);
+
+        // Assert and Act
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The Google service-account.json does not contain the project_id.');
+
+        $googleCloudAuth->getProjectId();
     }
 }
