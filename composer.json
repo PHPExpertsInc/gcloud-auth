@@ -22,7 +22,7 @@
         "php": ">=8.0",
         "ext-json": "*",
         "ext-openssl": "*",
-        "phpexperts/rest-speaker": "^v2.7"
+        "phpexperts/rest-speaker": "^v3.0"
     },
     "require-dev": {
         "phpunit/phpunit": "*",

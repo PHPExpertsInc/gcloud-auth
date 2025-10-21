@@ -179,6 +179,7 @@ class GoogleCloudAuth extends RESTAuth
 
         throw new RuntimeException('Could not find composer.json in any parent directory');
     }
+
     public function getGoogleServiceAccountData(): array
     {
         return $this->serviceAccountData;
